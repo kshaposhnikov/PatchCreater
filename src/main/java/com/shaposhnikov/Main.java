@@ -1,82 +1,33 @@
 package com.shaposhnikov;
 
-import com.shaposhnikov.util.Constants;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
 
-public class Main {
+public class Main extends Application {
 
     public static void main(String[] args) throws IOException {
-        List<String> classNames = new ArrayList<>();
-        String sourcePath = "";
-        String targetPath = "";
-
-        String currentCommand = "";
-        for (String arg : args) {
-            if (Constants.TerminalArguments.ARGUMENTS.contains(arg)) {
-                currentCommand = arg;
-            } else {
-                switch (currentCommand) {
-                    case Constants.TerminalArguments.SOURCE_PATH_ARG:
-                        sourcePath = arg;
-                        break;
-                    case Constants.TerminalArguments.TARGET_PATH_ARG:
-                        targetPath = arg;
-                        break;
-                    case Constants.TerminalArguments.CLASS_NAME_ARG:
-                        classNames.add(arg);
-                }
-            }
-        }
-
-        System.out.println("Creating patch started");
-
-        for (String className : classNames) {
-            String str = parseClassName(className);
-
-            System.out.println("Search " + className);
-
-            findClass(sourcePath, targetPath, str);
-        }
+        launch(args);
     }
 
-    private static String parseClassName(String name) {
-        return name.replace(".", "\\");
-    }
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        primaryStage.setTitle("Patch Creater");
 
-    private static void findClass(String sourcePasth, String targetPath, String className) throws IOException {
-        File currentFile = new File(sourcePasth);
-        for (File file : currentFile.listFiles()) {
-            if (file.isDirectory()) {
-                findClass(file.getAbsolutePath(), targetPath, className);
-            } else if (file.getAbsolutePath().contains(className + ".class")) {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("main_view.fxml"));
+        Pane pane = fxmlLoader.load();
 
-                System.out.println("Class " + className + " was found");
+        final Scene mainScene = new Scene(pane, 600, 400, Color.LIGHTGRAY);
+        primaryStage.setScene(mainScene);
 
-                copyClassToTargetFolder(file.getAbsolutePath(), targetPath, className);
-            }
-        }
-    }
+        pane.prefWidthProperty().bind(mainScene.widthProperty());
+        pane.prefHeightProperty().bind(mainScene.heightProperty());
 
-    private static void copyClassToTargetFolder(String sourcePath, String targetPath, String className) throws IOException {
-        String[] splitClassName = className.split("\\\\");
-        String newTargetPath = targetPath;
-        for (int i = 0; i < splitClassName.length - 1; i++) {
-            newTargetPath += "\\" + splitClassName[i];
-            if (!Files.exists(Paths.get(newTargetPath))) {
-                Files.createDirectory(Paths.get(newTargetPath));
-            }
-        }
-
-        newTargetPath += "\\" + splitClassName[splitClassName.length - 1] + ".class";
-        Files.copy(Paths.get(sourcePath), Paths.get(newTargetPath), StandardCopyOption.REPLACE_EXISTING);
-
-        System.out.println("Class " + className + " was copied successfully");
+        primaryStage.show();
     }
 }
